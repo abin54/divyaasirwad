@@ -54,7 +54,7 @@ export const getAllBookings = functions.https.onCall(async (data, context) => {
     const skip = (page - 1) * limit;
     const snapshot = await query.offset(skip).limit(limit).get();
     const totalSnap = await query.count().get();
-    return paginatedResponse(snapshot.docs.map((d) => d.data()), totalSnap.data().count, page, limit);
+    return paginatedResponse(snapshot.docs.map((d: any) => d.data()), totalSnap.data().count, page, limit);
   });
 });
 
@@ -73,7 +73,7 @@ export const getUsersList = functions.https.onCall(async (data, context) => {
     const skip = (page - 1) * limit;
     const snapshot = await query.orderBy('createdAt', 'desc').offset(skip).limit(limit).get();
     const totalSnap = await query.count().get();
-    return paginatedResponse(snapshot.docs.map((d) => d.data()), totalSnap.data().count, page, limit);
+    return paginatedResponse(snapshot.docs.map((d: any) => d.data()), totalSnap.data().count, page, limit);
   });
 });
 
