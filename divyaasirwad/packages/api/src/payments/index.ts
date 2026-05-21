@@ -33,11 +33,17 @@ export const createPaymentOrder = functions.https.onCall(async (data, context) =
     await collections.bookings.doc(bookingId).update({ paymentId: paymentRef.id, updatedAt: new Date() });
 
     logEvent('payment_order_created', { paymentId, bookingId, amount: booking.totalAmount });
+
+    const razorpayKey = functions.config().razorpay?.key;
+    if (!razorpayKey) {
+      logEvent('payment_config_missing', { paymentId });
+    }
+
     return successResponse({
       paymentId,
       amount: booking.totalAmount,
       currency: 'INR',
-      key: functions.config().razorpay?.key || 'rzp_test_placeholder',
+      key: razorpayKey,
     });
   });
 });

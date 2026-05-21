@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text as DSText, Card } from '@divyaasirwad/design-system';
@@ -9,7 +9,9 @@ export function BookingSummaryScreen() {
   const route = useRoute<any>();
   const insets = useSafeAreaInsets();
   const { bookingData } = route.params;
-  const total = 2100;
+  const basePrice = bookingData?.selectedRitual?.price || bookingData?.basePrice || 0;
+  const devoteeCount = Math.max(1, bookingData?.devotees?.length || 1);
+  const total = basePrice * devoteeCount;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

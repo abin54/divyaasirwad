@@ -1,45 +1,56 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
-// Interfaces for our Admin datasets
+interface Toast { id: number; message: string; type: 'success' | 'error' | 'info'; }
+
+let toastId = 0;
+
+function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
+    const id = ++toastId;
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 5000);
+  }, []);
+  return { toasts, addToast };
+}
+
 interface MockBooking {
-  id: string;
-  bookingId: string;
-  devoteeName: string;
-  ritualName: string;
-  templeName: string;
-  amount: number;
+  id: string; bookingId: string; devoteeName: string; ritualName: string;
+  templeName: string; amount: number;
   status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
-  date: string;
-  panditName?: string;
+  date: string; panditName?: string;
   prasadStatus?: 'processing' | 'dispatched' | 'delivered';
-  trackingId?: string;
-  courier?: string;
+  trackingId?: string; courier?: string;
 }
 
-interface MockTemple {
-  id: string;
-  name: string;
-  location: string;
-  deity: string;
-  totalBookings: number;
-  verified: boolean;
-  active: boolean;
-}
+interface MockTemple { id: string; name: string; location: string; deity: string; totalBookings: number; verified: boolean; active: boolean; }
 
-interface MockPandit {
-  id: string;
-  name: string;
-  phone: string;
-  specialization: string;
-  rating: number;
-  active: boolean;
-  status: 'available' | 'busy';
+interface MockPandit { id: string; name: string; phone: string; specialization: string; rating: number; active: boolean; status: 'available' | 'busy'; }
+
+function ToastContainer({ toasts }: { toasts: Toast[] }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div className="toast-container">
+      {toasts.map((t) => (
+        <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>
+      ))}
+    </div>
+  );
 }
 
 export default function App() {
+  const { toasts, addToast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'temples' | 'pandits' | 'commission' | 'prasad'>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Interactive Mock Datasets with State
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') closeSidebar(); };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [closeSidebar]);
+
   const [bookings, setBookings] = useState<MockBooking[]>([
     { id: '1', bookingId: 'DC65A1B2', devoteeName: 'Raman Sharma', ritualName: 'Satyanarayan Puja', templeName: 'Kashi Vishwanath', amount: 2100, status: 'confirmed', date: '2026-05-22', panditName: 'Pt. Alok Shastri', prasadStatus: 'processing' },
     { id: '2', bookingId: 'DC89C3D4', devoteeName: 'Sushma Sen', ritualName: 'Rudrabhishek Hawan', templeName: 'Somnath Jyotirlinga', amount: 3100, status: 'in_progress', date: '2026-05-21', panditName: 'Pt. Ramesh Dwivedi', prasadStatus: 'processing' },
@@ -65,93 +76,87 @@ export default function App() {
     { id: '5', name: 'Pt. Manoj Vyas', phone: '+91 95432 90876', specialization: 'Pitru Tarpan, Shradh', rating: 4.6, active: false, status: 'available' },
   ]);
 
-  // Input states for Prasad dispatching
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [courierPartner, setCourierPartner] = useState('BlueDart');
   const [trackingNumber, setTrackingNumber] = useState('');
 
-  // Calculations for Overview & Commission
   const totalBookingsCount = bookings.length;
   const totalRevenue = bookings.filter(b => b.status !== 'cancelled').reduce((acc, curr) => acc + curr.amount, 0);
-  const platformCommission = totalRevenue * 0.20; // 20% commission
+  const platformCommission = totalRevenue * 0.20;
   const activeUsersCount = 1240;
 
-  // Actions handlers
   const toggleTempleVerification = (id: string) => {
     setTemples(temples.map(t => t.id === id ? { ...t, verified: !t.verified } : t));
+    const t = temples.find(t => t.id === id);
+    addToast(`${t?.name} ${t?.verified ? 'unverified' : 'verified'} successfully`, t?.verified ? 'error' : 'success');
   };
 
   const toggleTempleActive = (id: string) => {
     setTemples(temples.map(t => t.id === id ? { ...t, active: !t.active } : t));
+    const t = temples.find(t => t.id === id);
+    addToast(`${t?.name} ${t?.active ? 'suspended' : 'activated'}`, t?.active ? 'error' : 'success');
   };
 
   const togglePanditActive = (id: string) => {
     setPandits(pandits.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    const p = pandits.find(p => p.id === id);
+    addToast(`${p?.name} ${p?.active ? 'suspended' : 'approved'}`, p?.active ? 'error' : 'success');
   };
 
   const changeBookingStatus = (id: string, newStatus: any) => {
     setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    addToast(`Booking #${bookings.find(b => b.id === id)?.bookingId} → ${newStatus}`, 'info');
   };
 
   const assignPandit = (bookingId: string, name: string) => {
     setBookings(bookings.map(b => b.id === bookingId ? { ...b, panditName: name, status: 'confirmed' } : b));
+    addToast(`Pandit ${name} assigned to booking`, 'success');
   };
 
   const dispatchPrasad = (bookingId: string) => {
     if (!trackingNumber.trim()) {
-      alert('Please enter a valid tracking number');
+      addToast('Please enter a valid tracking number', 'error');
       return;
     }
-    setBookings(bookings.map(b => b.id === bookingId ? { 
-      ...b, 
-      prasadStatus: 'dispatched', 
-      trackingId: trackingNumber, 
-      courier: courierPartner 
+    setBookings(bookings.map(b => b.id === bookingId ? {
+      ...b,
+      prasadStatus: 'dispatched',
+      trackingId: trackingNumber,
+      courier: courierPartner
     } : b));
     setEditingBookingId(null);
     setTrackingNumber('');
-    alert(`Prasad successfully dispatched! User will receive an FCM push with courier partner ${courierPartner} and tracking code ${trackingNumber}.`);
+    addToast(`Prasad dispatched via ${courierPartner} (${trackingNumber})`, 'success');
   };
+
+  const navItems = [
+    { key: 'overview', icon: '📊', label: 'Overview' },
+    { key: 'bookings', icon: '📋', label: 'Bookings Hub' },
+    { key: 'temples', icon: '🕌', label: 'Temple Directory' },
+    { key: 'pandits', icon: '🙏', label: 'Pandit Directory' },
+    { key: 'commission', icon: '💰', label: 'Commission Ledger' },
+    { key: 'prasad', icon: '📦', label: 'Prasad Center' },
+  ] as const;
 
   return (
     <div className="admin-layout">
-      {/* Sidebar navigation */}
-      <aside className="sidebar">
+      <ToastContainer toasts={toasts} />
+
+      <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={closeSidebar} />
+
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="logo-container">
           <span className="logo-emoji">🛕</span>
           <span className="logo-text">DivineConnect</span>
         </div>
         <ul className="nav-links">
-          <li className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}>
-            <a href="#overview" onClick={() => setActiveTab('overview')}>
-              <span>📊</span> Overview
-            </a>
-          </li>
-          <li className={`nav-item ${activeTab === 'bookings' ? 'active' : ''}`}>
-            <a href="#bookings" onClick={() => setActiveTab('bookings')}>
-              <span>📋</span> Bookings Hub
-            </a>
-          </li>
-          <li className={`nav-item ${activeTab === 'temples' ? 'active' : ''}`}>
-            <a href="#temples" onClick={() => setActiveTab('temples')}>
-              <span>🕌</span> Temple Directory
-            </a>
-          </li>
-          <li className={`nav-item ${activeTab === 'pandits' ? 'active' : ''}`}>
-            <a href="#pandits" onClick={() => setActiveTab('pandits')}>
-              <span>🙏</span> Pandit Directory
-            </a>
-          </li>
-          <li className={`nav-item ${activeTab === 'commission' ? 'active' : ''}`}>
-            <a href="#commission" onClick={() => setActiveTab('commission')}>
-              <span>💰</span> Commission Ledger
-            </a>
-          </li>
-          <li className={`nav-item ${activeTab === 'prasad' ? 'active' : ''}`}>
-            <a href="#prasad" onClick={() => setActiveTab('prasad')}>
-              <span>📦</span> Prasad Center
-            </a>
-          </li>
+          {navItems.map(({ key, icon, label }) => (
+            <li key={key} className={`nav-item ${activeTab === key ? 'active' : ''}`}>
+              <a href={`#${key}`} onClick={(e) => { e.preventDefault(); setActiveTab(key); closeSidebar(); }}>
+                <span>{icon}</span> {label}
+              </a>
+            </li>
+          ))}
         </ul>
         <div className="sidebar-footer">
           <div className="admin-avatar">DC</div>
@@ -162,10 +167,11 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Panel Content wrapper */}
       <main className="main-wrapper">
-        
-        {/* OVERVIEW TAB */}
+        <button className="hamburger-btn" onClick={() => setSidebarOpen(true)} aria-label="Open sidebar">
+          ☰
+        </button>
+
         {activeTab === 'overview' && (
           <div>
             <header className="page-header">
@@ -173,10 +179,9 @@ export default function App() {
                 <h1 className="page-title">DivineConnect Admin Console ☀️</h1>
                 <p className="page-subtitle">Platform health, booking metrics, and commission splits</p>
               </div>
-              <button className="btn btn-primary" onClick={() => alert('Exporting PDF Report...')}>⚡ Export Metrics</button>
+              <button className="btn btn-primary" onClick={() => addToast('PDF report exported', 'success')}>⚡ Export Metrics</button>
             </header>
 
-            {/* KPI statistics cards */}
             <div className="analytics-grid">
               <div className="stat-card">
                 <div className="stat-icon">₹</div>
@@ -204,10 +209,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* Detailed tables inside dual layout */}
             <div className="dashboard-grid">
-              
-              {/* Recent Bookings Panel */}
               <div className="data-card">
                 <div className="card-header">
                   <h3 className="card-title">Recent Puja Bookings</h3>
@@ -217,25 +219,18 @@ export default function App() {
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>Booking ID</th>
-                        <th>Devotee</th>
-                        <th>Ritual</th>
-                        <th>Temple</th>
-                        <th>Amount</th>
-                        <th>Status</th>
+                        <th>Booking ID</th><th>Devotee</th><th>Ritual</th><th>Temple</th><th>Amount</th><th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {bookings.slice(0, 3).map((booking) => (
                         <tr key={booking.id}>
-                          <td style={{ fontWeight: 'bold', color: '#E65100' }}>{booking.bookingId}</td>
+                          <td className="td-book-id">{booking.bookingId}</td>
                           <td>{booking.devoteeName}</td>
                           <td>{booking.ritualName}</td>
                           <td>{booking.templeName}</td>
                           <td>₹{booking.amount}</td>
-                          <td>
-                            <span className={`badge ${booking.status}`}>{booking.status}</span>
-                          </td>
+                          <td><span className={`badge ${booking.status}`}>{booking.status}</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -243,44 +238,41 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Quick Actions / Activity log */}
               <div className="data-card">
                 <div className="card-header">
                   <h3 className="card-title">System Activity Log</h3>
                 </div>
-                <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div style={{ fontSize: '13px', display: 'flex', gap: '10px' }}>
+                <div className="flex flex-col gap-16 p-20">
+                  <div className="activity-item">
                     <span>🟢</span>
                     <div>
-                      <p style={{ fontWeight: 'bold' }}>FCM Push Dispatched</p>
-                      <p style={{ color: 'var(--text-secondary)' }}>FCM alert sent to Raman Sharma confirming Satyanarayan Puja.</p>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>2 mins ago</span>
+                      <p className="activity-title">FCM Push Dispatched</p>
+                      <p className="activity-text">FCM alert sent to Raman Sharma confirming Satyanarayan Puja.</p>
+                      <span className="activity-time">2 mins ago</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', display: 'flex', gap: '10px' }}>
+                  <div className="activity-item">
                     <span>💳</span>
                     <div>
-                      <p style={{ fontWeight: 'bold' }}>Razorpay Signature Verified</p>
-                      <p style={{ color: 'var(--text-secondary)' }}>Payment verified for order pay_DC65A1B2 (₹2,100).</p>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>15 mins ago</span>
+                      <p className="activity-title">Razorpay Signature Verified</p>
+                      <p className="activity-text">Payment verified for order pay_DC65A1B2 (₹2,100).</p>
+                      <span className="activity-time">15 mins ago</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: '13px', display: 'flex', gap: '10px' }}>
+                  <div className="activity-item">
                     <span>🕉️</span>
                     <div>
-                      <p style={{ fontWeight: 'bold' }}>New Pandit Registered</p>
-                      <p style={{ color: 'var(--text-secondary)' }}>Pt. Manoj Vyas submitted documents for verification.</p>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>1 hour ago</span>
+                      <p className="activity-title">New Pandit Registered</p>
+                      <p className="activity-text">Pt. Manoj Vyas submitted documents for verification.</p>
+                      <span className="activity-time">1 hour ago</span>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         )}
 
-        {/* BOOKINGS HUB TAB */}
         {activeTab === 'bookings' && (
           <div>
             <header className="page-header">
@@ -295,34 +287,24 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Booking ID</th>
-                      <th>Devotee Name</th>
-                      <th>Ritual Details</th>
-                      <th>Mandir / Destination</th>
-                      <th>Assigned Pandit</th>
-                      <th>Price</th>
-                      <th>Status & State Transitions</th>
+                      <th>Booking ID</th><th>Devotee</th><th>Ritual</th><th>Temple</th><th>Pandit</th><th>Amount</th><th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.map((booking) => (
                       <tr key={booking.id}>
-                        <td style={{ fontWeight: 'bold', color: '#E65100' }}>{booking.bookingId}</td>
+                        <td className="td-book-id">{booking.bookingId}</td>
                         <td>{booking.devoteeName}</td>
                         <td>
-                          <div style={{ fontWeight: '600' }}>{booking.ritualName}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Scheduled: {booking.date}</div>
+                          <div className="text-semibold">{booking.ritualName}</div>
+                          <div className="text-xs text-muted">Scheduled: {booking.date}</div>
                         </td>
                         <td>{booking.templeName}</td>
                         <td>
                           {booking.panditName ? (
-                            <span style={{ fontWeight: '500' }}>{booking.panditName}</span>
+                            <span className="text-medium">{booking.panditName}</span>
                           ) : (
-                            <select 
-                              style={{ padding: '6px', fontSize: '12px', border: '1px solid #E5E7EB', borderRadius: '4px' }}
-                              onChange={(e) => assignPandit(booking.id, e.target.value)}
-                              defaultValue=""
-                            >
+                            <select className="form-select" onChange={(e) => assignPandit(booking.id, e.target.value)} defaultValue="">
                               <option value="" disabled>Select Pandit</option>
                               {pandits.filter(p => p.active && p.status === 'available').map(p => (
                                 <option key={p.id} value={p.name}>{p.name}</option>
@@ -330,16 +312,11 @@ export default function App() {
                             </select>
                           )}
                         </td>
-                        <td style={{ fontWeight: 'bold' }}>₹{booking.amount}</td>
+                        <td className="td-bold">₹{booking.amount}</td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div className="flex items-center gap-10">
                             <span className={`badge ${booking.status}`}>{booking.status}</span>
-                            
-                            <select
-                              value={booking.status}
-                              onChange={(e) => changeBookingStatus(booking.id, e.target.value as any)}
-                              style={{ padding: '6px', fontSize: '12px', border: '1px solid #E5E7EB', borderRadius: '4px' }}
-                            >
+                            <select className="form-select" value={booking.status} onChange={(e) => changeBookingStatus(booking.id, e.target.value)}>
                               <option value="pending">Pending</option>
                               <option value="confirmed">Confirmed</option>
                               <option value="in_progress">In Progress</option>
@@ -357,7 +334,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TEMPLE DIRECTORY TAB */}
         {activeTab === 'temples' && (
           <div>
             <header className="page-header">
@@ -365,7 +341,7 @@ export default function App() {
                 <h1 className="page-title">Temple Registry & Verified Listings 🕌</h1>
                 <p className="page-subtitle">Authorize pilgrimage sites, edit details, and verify credentials</p>
               </div>
-              <button className="btn btn-primary" onClick={() => alert('Form to register new Temple coming soon!')}>🛕 Register New Mandir</button>
+              <button className="btn btn-primary" onClick={() => addToast('New temple registration form coming soon!', 'info')}>🛕 Register New Mandir</button>
             </header>
 
             <div className="data-card">
@@ -373,42 +349,28 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Temple Name</th>
-                      <th>Location</th>
-                      <th>Primary Deity</th>
-                      <th>Total Bookings</th>
-                      <th>Credentials Status</th>
-                      <th>Search Feeds Active</th>
-                      <th>System Actions</th>
+                      <th>Temple Name</th><th>Location</th><th>Primary Deity</th><th>Total Bookings</th><th>Credentials</th><th>Active</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {temples.map((temple) => (
                       <tr key={temple.id}>
-                        <td style={{ fontWeight: 'bold', fontSize: '15px' }}>{temple.name}</td>
+                        <td className="text-bold">{temple.name}</td>
                         <td>📍 {temple.location}</td>
-                        <td><span style={{ backgroundColor: '#FFE0B2', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold', color: '#E65100' }}>{temple.deity}</span></td>
-                        <td style={{ fontWeight: 'bold' }}>{temple.totalBookings} pujas</td>
+                        <td><span className="deity-badge">{temple.deity}</span></td>
+                        <td className="td-bold">{temple.totalBookings} pujas</td>
                         <td>
-                          <button 
-                            className={`btn ${temple.verified ? 'badge completed' : 'badge cancelled'}`}
-                            onClick={() => toggleTempleVerification(temple.id)}
-                            style={{ padding: '4px 10px', fontSize: '11px', border: 'none', cursor: 'pointer' }}
-                          >
-                            {temple.verified ? '✓ Verified Listing' : '✕ Click to Verify'}
+                          <button className={`btn ${temple.verified ? 'badge completed' : 'badge cancelled'} action-btn`} onClick={() => toggleTempleVerification(temple.id)}>
+                            {temple.verified ? '✓ Verified' : '✕ Click to Verify'}
                           </button>
                         </td>
                         <td>
-                          <button 
-                            className={`btn ${temple.active ? 'badge completed' : 'badge pending'}`}
-                            onClick={() => toggleTempleActive(temple.id)}
-                            style={{ padding: '4px 10px', fontSize: '11px', border: 'none', cursor: 'pointer' }}
-                          >
+                          <button className={`btn ${temple.active ? 'badge completed' : 'badge pending'} action-btn`} onClick={() => toggleTempleActive(temple.id)}>
                             {temple.active ? '● Active' : '○ Suspended'}
                           </button>
                         </td>
                         <td>
-                          <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => alert(`Editing details for ${temple.name}...`)}>Edit</button>
+                          <button className="btn btn-secondary action-btn" onClick={() => addToast(`Editing ${temple.name}...`, 'info')}>Edit</button>
                         </td>
                       </tr>
                     ))}
@@ -419,13 +381,12 @@ export default function App() {
           </div>
         )}
 
-        {/* PANDIT DIRECTORY TAB */}
         {activeTab === 'pandits' && (
           <div>
             <header className="page-header">
               <div>
                 <h1 className="page-title">Pandit Directory & Schedules 🙏</h1>
-                <p className="page-subtitle">Verify Pandit credentials, check availability calendars, and review dakshina splits</p>
+                <p className="page-subtitle">Verify Pandit credentials, check availability, and review dakshina splits</p>
               </div>
             </header>
 
@@ -434,38 +395,26 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Pandit Name</th>
-                      <th>Contact Phone</th>
-                      <th>Specializations</th>
-                      <th>Rating Score</th>
-                      <th>Availability Status</th>
-                      <th>Account Status</th>
-                      <th>System Action</th>
+                      <th>Pandit Name</th><th>Contact</th><th>Specializations</th><th>Rating</th><th>Status</th><th>Account</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {pandits.map((pandit) => (
                       <tr key={pandit.id}>
-                        <td style={{ fontWeight: 'bold', fontSize: '15px' }}>{pandit.name}</td>
+                        <td className="text-bold">{pandit.name}</td>
                         <td>{pandit.phone}</td>
                         <td>{pandit.specialization}</td>
-                        <td style={{ fontWeight: 'bold', color: '#F59E0B' }}>⭐ {pandit.rating} / 5.0</td>
+                        <td className="td-rating">⭐ {pandit.rating} / 5.0</td>
                         <td>
-                          <span className={`badge ${pandit.status === 'available' ? 'completed' : 'pending'}`}>
-                            {pandit.status}
-                          </span>
+                          <span className={`badge ${pandit.status === 'available' ? 'completed' : 'pending'}`}>{pandit.status}</span>
                         </td>
                         <td>
-                          <button 
-                            className={`btn ${pandit.active ? 'badge completed' : 'badge pending'}`}
-                            onClick={() => togglePanditActive(pandit.id)}
-                            style={{ padding: '4px 10px', fontSize: '11px', border: 'none', cursor: 'pointer' }}
-                          >
+                          <button className={`btn ${pandit.active ? 'badge completed' : 'badge pending'} action-btn`} onClick={() => togglePanditActive(pandit.id)}>
                             {pandit.active ? 'Approved' : 'Suspended'}
                           </button>
                         </td>
                         <td>
-                          <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => alert(`Viewing calendar schedule for ${pandit.name}...`)}>View Calendar</button>
+                          <button className="btn btn-secondary action-btn" onClick={() => addToast(`Viewing calendar for ${pandit.name}...`, 'info')}>View Calendar</button>
                         </td>
                       </tr>
                     ))}
@@ -476,26 +425,25 @@ export default function App() {
           </div>
         )}
 
-        {/* COMMISSION LEDGER TAB */}
         {activeTab === 'commission' && (
           <div>
             <header className="page-header">
               <div>
                 <h1 className="page-title">Commission Ledger & Revenue Analytics 💰</h1>
-                <p className="page-subtitle">Track the platform's 20% commission on pujas, donations, and travel yatras</p>
+                <p className="page-subtitle">Track the platform's 20% commission on pujas, donations, and yatras</p>
               </div>
             </header>
 
             <div className="analytics-grid">
-              <div className="stat-card" style={{ borderLeft: '4px solid var(--saffron)' }}>
+              <div className="stat-card stat-card-accent-saffron">
                 <div className="stat-title">Platform Gross Earnings</div>
                 <div className="stat-value">₹{totalRevenue.toLocaleString('en-IN')}</div>
               </div>
-              <div className="stat-card" style={{ borderLeft: '4px solid var(--primary-600)' }}>
+              <div className="stat-card stat-card-accent-primary">
                 <div className="stat-title">DivineConnect Margin (20%)</div>
                 <div className="stat-value">₹{platformCommission.toLocaleString('en-IN')}</div>
               </div>
-              <div className="stat-card" style={{ borderLeft: '4px solid var(--success)' }}>
+              <div className="stat-card stat-card-accent-success">
                 <div className="stat-title">Settled to Mandirs & Pandits (80%)</div>
                 <div className="stat-value">₹{(totalRevenue * 0.80).toLocaleString('en-IN')}</div>
               </div>
@@ -509,24 +457,18 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Transaction ID</th>
-                      <th>Puja / Service Details</th>
-                      <th>Total Paid</th>
-                      <th>Pandit Share (50%)</th>
-                      <th>Temple Share (30%)</th>
-                      <th>Platform Commission (20%)</th>
-                      <th>Payout Status</th>
+                      <th>Transaction ID</th><th>Service</th><th>Total</th><th>Pandit (50%)</th><th>Temple (30%)</th><th>Platform (20%)</th><th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.filter(b => b.status === 'completed' || b.status === 'confirmed').map((booking) => (
                       <tr key={booking.id}>
-                        <td style={{ fontWeight: 'bold' }}>TXN{booking.bookingId}</td>
+                        <td className="td-bold">TXN{booking.bookingId}</td>
                         <td>{booking.ritualName} ({booking.templeName})</td>
-                        <td style={{ fontWeight: 'bold' }}>₹{booking.amount}</td>
-                        <td style={{ color: '#2E7D32' }}>₹{booking.amount * 0.50}</td>
-                        <td style={{ color: '#0288D1' }}>₹{booking.amount * 0.30}</td>
-                        <td style={{ fontWeight: 'bold', color: '#E65100' }}>₹{booking.amount * 0.20}</td>
+                        <td className="td-bold">₹{booking.amount}</td>
+                        <td className="td-revenue-green">₹{booking.amount * 0.50}</td>
+                        <td className="td-revenue-blue">₹{booking.amount * 0.30}</td>
+                        <td className="td-revenue-saffron">₹{booking.amount * 0.20}</td>
                         <td><span className="badge completed">Auto-Settled</span></td>
                       </tr>
                     ))}
@@ -537,13 +479,12 @@ export default function App() {
           </div>
         )}
 
-        {/* PRASAD CENTER TAB */}
         {activeTab === 'prasad' && (
           <div>
             <header className="page-header">
               <div>
                 <h1 className="page-title">Prasad Dispatch Center 📦</h1>
-                <p className="page-subtitle">Input courier tracking codes to trigger FCM alerts, gotra updates, and dispatch confirmations</p>
+                <p className="page-subtitle">Input courier tracking codes to trigger FCM alerts and dispatch confirmations</p>
               </div>
             </header>
 
@@ -555,28 +496,18 @@ export default function App() {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th>Booking ID</th>
-                      <th>Devotee Name</th>
-                      <th>Completed Ritual</th>
-                      <th>Prasad Courier Partner</th>
-                      <th>Courier Tracking Code</th>
-                      <th>Prasad Status</th>
-                      <th>Dispatch Actions</th>
+                      <th>Booking ID</th><th>Devotee</th><th>Ritual</th><th>Courier</th><th>Tracking</th><th>Status</th><th>Dispatch</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.filter(b => b.status === 'completed' || b.status === 'confirmed').map((booking) => (
                       <tr key={booking.id}>
-                        <td style={{ fontWeight: 'bold', color: '#E65100' }}>{booking.bookingId}</td>
+                        <td className="td-book-id">{booking.bookingId}</td>
                         <td>{booking.devoteeName}</td>
                         <td>{booking.ritualName}</td>
                         <td>
                           {editingBookingId === booking.id ? (
-                            <select 
-                              value={courierPartner} 
-                              onChange={(e) => setCourierPartner(e.target.value)}
-                              style={{ padding: '6px', border: '1px solid #E5E7EB', borderRadius: '4px' }}
-                            >
+                            <select className="form-select" value={courierPartner} onChange={(e) => setCourierPartner(e.target.value)}>
                               <option value="BlueDart">BlueDart</option>
                               <option value="DTDC">DTDC</option>
                               <option value="Delhivery">Delhivery</option>
@@ -588,47 +519,30 @@ export default function App() {
                         </td>
                         <td>
                           {editingBookingId === booking.id ? (
-                            <input 
-                              type="text" 
-                              placeholder="Enter tracking code" 
-                              value={trackingNumber}
-                              onChange={(e) => setTrackingNumber(e.target.value)}
-                              style={{ padding: '6px', border: '1px solid #E5E7EB', borderRadius: '4px', fontSize: '13px' }}
-                            />
+                            <input className="form-input" type="text" placeholder="Enter tracking code" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} />
                           ) : (
-                            <span style={{ fontFamily: 'monospace' }}>{booking.trackingId || '—'}</span>
+                            <span className="mono">{booking.trackingId || '—'}</span>
                           )}
                         </td>
                         <td>
-                          <span style={{ 
-                            backgroundColor: booking.prasadStatus === 'delivered' ? '#D1FAE5' : booking.prasadStatus === 'dispatched' ? '#DBEAFE' : '#FEF3C7', 
-                            color: booking.prasadStatus === 'delivered' ? '#047857' : booking.prasadStatus === 'dispatched' ? '#1D4ED8' : '#D97706',
-                            padding: '4px 10px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: 'bold'
-                          }}>
+                          <span className={`prasad-badge ${booking.prasadStatus || 'processing'}`}>
                             {booking.prasadStatus || 'processing'}
                           </span>
                         </td>
                         <td>
                           {booking.prasadStatus === 'delivered' ? (
-                            <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>✓ Handed Over</span>
+                            <span className="prasad-delivered">✓ Handed Over</span>
                           ) : editingBookingId === booking.id ? (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => dispatchPrasad(booking.id)}>Confirm</button>
-                              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '12px' }} onClick={() => setEditingBookingId(null)}>Cancel</button>
+                            <div className="flex gap-8">
+                              <button className="btn btn-primary action-btn" onClick={() => dispatchPrasad(booking.id)}>Confirm</button>
+                              <button className="btn btn-secondary action-btn" onClick={() => setEditingBookingId(null)}>Cancel</button>
                             </div>
                           ) : (
-                            <button 
-                              className="btn btn-primary" 
-                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                              onClick={() => {
-                                setEditingBookingId(booking.id);
-                                setCourierPartner(booking.courier || 'BlueDart');
-                                setTrackingNumber(booking.trackingId || '');
-                              }}
-                            >
+                            <button className="btn btn-primary action-btn" onClick={() => {
+                              setEditingBookingId(booking.id);
+                              setCourierPartner(booking.courier || 'BlueDart');
+                              setTrackingNumber(booking.trackingId || '');
+                            }}>
                               🚀 Dispatch Prasad
                             </button>
                           )}
@@ -641,7 +555,6 @@ export default function App() {
             </div>
           </div>
         )}
-
       </main>
     </div>
   );

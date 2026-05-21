@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Button, Text as DSText, Card, Input } from '@divyaasirwad/design-system';
+import auth from '@react-native-firebase/auth';
 
 export function LoginScreen() {
   const navigation = useNavigation<any>();
   const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSendOtp = () => {
-    if (phone.length >= 10) {
-      navigation.navigate('Otp', { phone });
+  const handleSendOtp = async () => {
+    if (phone.length < 10) return;
+    setLoading(true);
+    try {
+      auth().settings.appVerificationDisabledForTesting = true;
+      const confirmResult = await auth().signInWithPhoneNumber(`+91${phone}`);
+      navigation.navigate('Otp', { phone, confirmResult });
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to send OTP');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,7 +43,7 @@ export function LoginScreen() {
           onChangeText={setPhone}
           leftIcon={<Text style={styles.countryCode}>🇮🇳 +91</Text>}
         />
-        <Button title="Send OTP" onPress={handleSendOtp} disabled={phone.length < 10} fullWidth />
+        <Button title={loading ? 'Sending OTP...' : 'Send OTP'} onPress={handleSendOtp} disabled={phone.length < 10 || loading} fullWidth />
         <View style={styles.orContainer}>
           <View style={styles.orLine} />
           <DSText variant="caption" color="#6B7280">OR</DSText>

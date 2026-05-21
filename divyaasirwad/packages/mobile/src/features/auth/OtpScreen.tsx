@@ -7,10 +7,11 @@ import { useAuthStore } from '../../shared/store';
 export function OtpScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { phone } = route.params;
+  const { phone, confirmResult } = route.params;
   const { setAuth } = useAuthStore();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
+  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<any[]>([]);
 
   useEffect(() => {
@@ -24,11 +25,28 @@ export function OtpScreen() {
     if (text && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const code = otp.join('');
-    if (code.length === 6) {
-      setAuth('mock_token', { id: '1', name: 'User', phone, role: 'user', language: 'en' });
+    if (code.length < 6) return;
+    setLoading(true);
+    try {
+      const credential = await confirmResult.confirm(code);
+      const user = credential.user;
+      const token = await user.getIdToken();
+      setAuth(token, {
+        id: user.uid,
+        name: user.displayName || 'User',
+        phone: user.phoneNumber || phone,
+        email: user.email,
+        photoURL: user.photoURL,
+        role: 'user',
+        language: 'en',
+      });
       navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
+    } catch {
+      alert('Invalid OTP. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,7 +70,7 @@ export function OtpScreen() {
           />
         ))}
       </View>
-      <Button title="Verify OTP" onPress={handleVerify} disabled={otp.join('').length < 6} fullWidth />
+      <Button title={loading ? 'Verifying...' : 'Verify OTP'} onPress={handleVerify} disabled={otp.join('').length < 6 || loading} fullWidth />
       <TouchableOpacity onPress={() => { if (timer === 0) setTimer(30); }} disabled={timer > 0} style={styles.resendContainer}>
         <DSText variant="label" weight="semibold" color={timer > 0 ? '#9CA3AF' : '#FF6F00'}>
           {timer > 0 ? `Resend OTP in ${timer}s` : 'Resend OTP'}

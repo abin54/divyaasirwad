@@ -6,6 +6,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "lint": "eslint src --max-warnings 50",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

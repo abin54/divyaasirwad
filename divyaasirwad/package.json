@@ -12,6 +12,8 @@
     "test": "npm run test --workspaces --if-present",
     "test:ci": "npm run test:ci --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx,css}\"",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "deploy:api": "firebase deploy --only functions",
     "deploy:hosting": "firebase deploy --only hosting",
@@ -20,6 +22,10 @@
     "emulators:export": "firebase emulators:export ./infra/firebase/emulator-data"
   },
   "devDependencies": {
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "prettier": "^3.2.0",
     "turbo": "^1.11.0",
     "typescript": "^5.3.0"
   },
