@@ -1,0 +1,11 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@divyaasirwad/shared": ["../shared/src"],
+      "@divyaasirwad/design-system": ["../design-system/src"]
+    }
+  }
+}

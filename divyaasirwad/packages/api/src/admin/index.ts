@@ -67,7 +67,7 @@ export const getUsersList = functions.https.onCall(async (data, context) => {
     }
 
     const { page = 1, limit = 20, role, search } = data;
-    let query = collections.users;
+    let query: any = collections.users;
     if (role) query = query.where('role', '==', role);
 
     const skip = (page - 1) * limit;

@@ -215,7 +215,8 @@ export type BookingStatus =
   | 'in_progress'
   | 'completed'
   | 'cancelled'
-  | 'refunded';
+  | 'refunded'
+  | 'cancellation_review';
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 

@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { db, auth, collections } from '../lib/firebase';
+import { db, auth, collections, FieldValue } from '../lib/firebase';
 import { AppError, withErrorHandling, requireAuth, successResponse } from '../lib/errors';
 import { logInfo, logEvent, measurePerformance } from '../lib/observability';
 import { validateSchema, sendOtpSchema, verifyOtpSchema } from '../lib/validation';
@@ -125,7 +125,7 @@ export const addFamilyMember = functions.https.onCall(async (data, context) => {
     };
 
     await collections.users.doc(uid).update({
-      familyMembers: db.FieldValue.arrayUnion(member),
+      familyMembers: FieldValue.arrayUnion(member),
       updatedAt: new Date(),
     });
 
@@ -138,7 +138,7 @@ export const updateFcmToken = functions.https.onCall(async (data, context) => {
   const uid = requireAuth(context);
   const { fcmToken } = data;
   await collections.users.doc(uid).update({
-    fcmTokens: db.FieldValue.arrayUnion(fcmToken),
+    fcmTokens: FieldValue.arrayUnion(fcmToken),
   });
   return successResponse({ message: 'FCM token updated' });
 });
@@ -148,7 +148,7 @@ export const logout = functions.https.onCall(async (data, context) => {
   const { fcmToken } = data;
   if (fcmToken) {
     await collections.users.doc(uid).update({
-      fcmTokens: db.FieldValue.arrayRemove(fcmToken),
+      fcmTokens: FieldValue.arrayRemove(fcmToken),
     });
   }
   return successResponse({ message: 'Logged out' });

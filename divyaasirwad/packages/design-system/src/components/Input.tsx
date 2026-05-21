@@ -15,11 +15,11 @@ export const Input = forwardRef<TextInput, InputProps>(
     return (
       <View style={[styles.container, containerStyle]}>
         {label && <Text style={styles.label}>{label}</Text>}
-        <View style={[styles.inputContainer, error && styles.inputError, !error && styles.inputDefault]}>
+        <View style={[styles.inputContainer, error ? styles.inputError : styles.inputDefault]}>
           {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
           <TextInput
             ref={ref}
-            style={[styles.input, leftIcon && styles.inputWithLeftIcon, rightIcon && styles.inputWithRightIcon, style]}
+            style={[styles.input, leftIcon ? styles.inputWithLeftIcon : undefined, rightIcon ? styles.inputWithRightIcon : undefined, style]}
             placeholderTextColor="#9CA3AF"
             {...props}
           />

@@ -4,6 +4,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text as DSText } from '@divyaasirwad/design-system';
 
+const FlatListAny = FlatList as any;
+
 const YATRAS = [
   { id: '1', name: 'Char Dham Yatra', nameHi: 'चार धाम यात्रा', state: 'Uttarakhand', days: 12, price: 15000, rating: 4.8, highlights: ['Badrinath', 'Kedarnath', 'Gangotri', 'Yamunotri'] },
   { id: '2', name: 'Kashi Yatra', nameHi: 'काशी यात्रा', state: 'Uttar Pradesh', days: 5, price: 8500, rating: 4.7, highlights: ['Kashi Vishwanath', 'Ganga Aarti', 'Sarnath'] },
@@ -21,7 +23,7 @@ export function YatraListScreen() {
         <DSText variant="heading" weight="extrabold">Pilgrimage Yatras</DSText>
         <DSText variant="caption" color="#6B7280">Embark on a spiritual journey</DSText>
       </View>
-      <FlatList data={YATRAS} renderItem={({ item }) => (
+      <FlatListAny data={YATRAS} renderItem={({ item }: any) => (
         <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={() => navigation.navigate('YatraDetail', { slug: item.id })}>
           <View style={styles.cardBanner}><Text style={styles.bannerEmoji}>🚌</Text></View>
           <View style={styles.cardContent}>
@@ -39,7 +41,7 @@ export function YatraListScreen() {
             </View>
           </View>
         </TouchableOpacity>
-      )} keyExtractor={(item) => item.id} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false} />
+      )} keyExtractor={(item: any) => item.id} contentContainerStyle={styles.list} showsVerticalScrollIndicator={false} />
     </View>
   );
 }

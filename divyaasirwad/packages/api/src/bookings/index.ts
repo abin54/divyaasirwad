@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import { db, collections } from '../lib/firebase';
+import { db, collections, FieldValue } from '../lib/firebase';
 import { AppError, withErrorHandling, requireAuth, successResponse, paginatedResponse } from '../lib/errors';
 import { logInfo, logEvent, measurePerformance } from '../lib/observability';
 import { validateSchema, createBookingSchema, cancelBookingSchema } from '../lib/validation';
@@ -52,7 +52,7 @@ export const createBooking = functions.https.onCall(async (data, context) => {
 
     if (templeId) {
       await collections.temples.doc(templeId).update({
-        totalBookings: db.FieldValue.increment(1),
+        totalBookings: FieldValue.increment(1),
       });
     }
 
@@ -170,7 +170,7 @@ export const uploadCompletionMedia = functions.https.onCall(async (data, context
     if (booking.panditId !== uid) throw new AppError('Unauthorized', 403, 'PERMISSION_DENIED');
 
     await doc.ref.update({
-      completionMedia: db.FieldValue.arrayUnion(...media),
+      completionMedia: FieldValue.arrayUnion(...media),
       updatedAt: new Date(),
     });
 

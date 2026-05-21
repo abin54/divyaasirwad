@@ -29,7 +29,7 @@ const weightStyles: Record<string, TextStyle> = {
 export function Text({ variant = 'body', weight = 'normal', color, align, style, numberOfLines, ...props }: TextProps) {
   return (
     <RNText
-      style={[variantStyles[variant], weightStyles[weight], color && { color }, align && { textAlign: align }, style]}
+      style={[variantStyles[variant], weightStyles[weight], color ? { color } : undefined, align ? { textAlign: align } : undefined, style]}
       numberOfLines={numberOfLines}
       {...props}
     />

@@ -16,6 +16,8 @@ export type BookingEvent =
   | { type: 'REFUND'; amount: number }
   | { type: 'PAYMENT_SUCCESS'; paymentId: string }
   | { type: 'PAYMENT_FAILED'; error: string }
+  | { type: 'APPROVE_CANCEL' }
+  | { type: 'REJECT_CANCEL' }
   | { type: 'RETRY' }
   | { type: 'ERROR'; error: string };
 

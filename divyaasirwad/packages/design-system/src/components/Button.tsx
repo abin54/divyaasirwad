@@ -6,7 +6,8 @@ export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'dan
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ButtonProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  title?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -54,6 +55,7 @@ const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> 
 
 export function Button({
   children,
+  title,
   onPress,
   variant = 'primary',
   size = 'lg',
@@ -93,7 +95,7 @@ export function Button({
       ) : (
         <View style={styles.content}>
           {leftIcon && <View style={styles.icon}>{leftIcon}</View>}
-          <Text style={[styles.text, variantStyles[variant].text, sizeStyles[size].text, textStyle]}>{children}</Text>
+          <Text style={[styles.text, variantStyles[variant].text, sizeStyles[size].text, textStyle]}>{title || children}</Text>
           {rightIcon && <View style={styles.icon}>{rightIcon}</View>}
         </View>
       )}

@@ -1,4 +1,3 @@
-import { describe, it, expect } from '@jest/globals';
 import { DEITIES, FESTIVALS_2026, COMMISSION_RATE, SUPPORTED_LANGUAGES } from '../src/constants';
 
 describe('Shared Constants', () => {

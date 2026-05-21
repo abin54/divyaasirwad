@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text as DSText } from '@divyaasirwad/design-system';
 import { DEITIES } from '@divyaasirwad/shared';
+
+const FlatListAny = FlatList as any;
 
 const TEMPLES = [
   { id: '1', name: 'Shri Kashi Vishwanath Temple', city: 'Varanasi', state: 'Uttar Pradesh', rating: 4.8, deity: 'Shiva', distance: '2.5 km' },
@@ -29,12 +31,12 @@ export function TempleListScreen() {
         <DSText variant="heading" weight="extrabold">Temples</DSText>
         <DSText variant="caption" color="#6B7280">Discover divine places</DSText>
       </View>
-      <FlatList horizontal showsHorizontalScrollIndicator={false} data={DEITIES_FILTER} renderItem={({ item }) => (
+      <FlatListAny horizontal showsHorizontalScrollIndicator={false} data={DEITIES_FILTER} renderItem={({ item }: any) => (
         <TouchableOpacity style={[styles.filterChip, activeDeity === item && styles.filterChipActive]} onPress={() => setActiveDeity(item)}>
           <DSText variant="caption" weight="semibold" color={activeDeity === item ? '#FFFFFF' : '#1A1A1A'}>{item}</DSText>
         </TouchableOpacity>
-      )} keyExtractor={(item) => item} contentContainerStyle={styles.filterList} />
-      <FlatList data={filtered} renderItem={({ item }) => (
+      )} keyExtractor={(item: any) => item} contentContainerStyle={styles.filterList} />
+      <FlatListAny data={filtered} renderItem={({ item }: any) => (
         <TouchableOpacity style={styles.templeCard} onPress={() => navigation.navigate('TempleDetail', { slug: item.id })} activeOpacity={0.8}>
           <View style={styles.templeImageContainer}><Text style={styles.templeEmoji}>🛕</Text></View>
           <View style={styles.templeInfo}>
@@ -47,7 +49,7 @@ export function TempleListScreen() {
             </View>
           </View>
         </TouchableOpacity>
-      )} keyExtractor={(item) => item.id} showsVerticalScrollIndicator={false} contentContainerStyle={styles.list} />
+      )} keyExtractor={(item: any) => item.id} showsVerticalScrollIndicator={false} contentContainerStyle={styles.list} />
     </View>
   );
 }
