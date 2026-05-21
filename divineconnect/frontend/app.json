@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "DivineConnect",
+    "slug": "divineconnect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "divineconnect",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF8E1"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.divineconnect.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFF8E1"
+      },
+      "package": "com.divineconnect.app",
+      "config": {
+        "googleMaps": { "apiKey": "YOUR_GOOGLE_MAPS_KEY" }
+      }
+    },
+    "web": { "favicon": "./src/assets/images/favicon.png" },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      "expo-notifications"
+    ],
+    "extra": {
+      "apiUrl": "http://localhost:5000/api/v1",
+      "razorpayKeyId": "YOUR_RAZORPAY_KEY"
+    }
+  }
+}

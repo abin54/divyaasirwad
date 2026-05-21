@@ -1,0 +1,40 @@
+export type RootStackParamList = {
+  Onboarding: undefined;
+  Login: undefined;
+  Otp: { phone: string };
+  MainTabs: undefined;
+  TempleDetail: { slug: string; id?: string };
+  TempleList: { deity?: string; city?: string };
+  RitualDetail: { slug: string };
+  RitualList: { deityId?: string; category?: string };
+  BookingFlow: { initialStep?: number; selectedDeity?: string; selectedTemple?: string; selectedRitual?: string };
+  SelectDeity: { returnTo?: string };
+  SelectTemple: { deityId?: string; returnTo?: string };
+  SelectRitual: { deityId?: string; templeId?: string; returnTo?: string };
+  SelectDateTime: { ritualId: string; packageType: string };
+  DevoteeDetails: { bookingData: any };
+  BookingSummary: { bookingData: any };
+  PaymentScreen: { bookingId: string; amount: number };
+  PaymentSuccess: { bookingId: string; paymentId: string };
+  BookingConfirmation: { bookingId: string };
+  Profile: undefined;
+  MyBookings: undefined;
+  BookingDetail: { id: string };
+  FamilyMembers: undefined;
+  YatraList: undefined;
+  YatraDetail: { slug: string };
+  PanditDashboard: undefined;
+  Horoscope: undefined;
+  Donations: undefined;
+  LiveDarshan: undefined;
+  Notifications: undefined;
+  Settings: undefined;
+};
+
+export type MainTabParamList = {
+  Home: undefined;
+  Temples: undefined;
+  Pujas: undefined;
+  Bookings: undefined;
+  Profile: undefined;
+};
