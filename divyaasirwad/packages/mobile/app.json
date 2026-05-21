@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Divyaasirwad",
+    "slug": "divyaasirwad",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "divyaasirwad",
+    "userInterfaceStyle": "light",
+    "splash": { "image": "./src/assets/images/splash.png", "resizeMode": "contain", "backgroundColor": "#FFFBF0" },
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.divyaasirwad.app" },
+    "android": { "adaptiveIcon": { "foregroundImage": "./src/assets/images/adaptive-icon.png", "backgroundColor": "#FFFBF0" }, "package": "com.divyaasirwad.app" },
+    "plugins": ["expo-font", "expo-secure-store", "expo-notifications"]
+  }
+}

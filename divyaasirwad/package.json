@@ -1,0 +1,29 @@
+{
+  "name": "divyaasirwad",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=packages/api",
+    "dev:mobile": "npm run start --workspace=packages/mobile",
+    "dev:admin": "npm run start --workspace=packages/admin",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:ci": "npm run test:ci --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "deploy:api": "firebase deploy --only functions",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "emulators": "firebase emulators:start --only functions,firestore,auth,storage",
+    "emulators:import": "firebase emulators:start --only functions,firestore,auth,storage --import=./infra/firebase/emulator-data",
+    "emulators:export": "firebase emulators:export ./infra/firebase/emulator-data"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
