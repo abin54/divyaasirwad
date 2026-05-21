@@ -30,12 +30,16 @@ interface MockPandit { id: string; name: string; phone: string; specialization: 
 function ToastContainer({ toasts }: { toasts: Toast[] }) {
   if (toasts.length === 0) return null;
   return (
-    <div className="toast-container">
-      {toasts.map((t) => (
-        <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>
-      ))}
-    </div>
+      <div className="toast-container" role="region" aria-label="Notifications">
+        {toasts.map((t) => (
+          <div key={t.id} className={`toast toast-${t.type}`} role="alert">{t.message}</div>
+        ))}
+      </div>
   );
+}
+
+function A11yIcon({ emoji, label }: { emoji: string; label: string }) {
+  return <span role="img" aria-label={label}>{emoji}</span>;
 }
 
 export default function App() {
@@ -144,20 +148,22 @@ export default function App() {
 
       <div className={`sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={closeSidebar} />
 
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} aria-label="Main navigation">
         <div className="logo-container">
-          <span className="logo-emoji">🛕</span>
+          <A11yIcon emoji="🛕" label="Temple" />
           <span className="logo-text">DivineConnect</span>
         </div>
-        <ul className="nav-links">
-          {navItems.map(({ key, icon, label }) => (
-            <li key={key} className={`nav-item ${activeTab === key ? 'active' : ''}`}>
-              <a href={`#${key}`} onClick={(e) => { e.preventDefault(); setActiveTab(key); closeSidebar(); }}>
-                <span>{icon}</span> {label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <nav aria-label="Admin sections">
+          <ul className="nav-links" role="list">
+            {navItems.map(({ key, icon, label }) => (
+              <li key={key} className={`nav-item ${activeTab === key ? 'active' : ''}`}>
+                <a href={`#${key}`} onClick={(e) => { e.preventDefault(); setActiveTab(key); closeSidebar(); }} aria-current={activeTab === key ? 'page' : undefined}>
+                  <A11yIcon emoji={icon} label={label} /> {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <div className="sidebar-footer">
           <div className="admin-avatar">DC</div>
           <div className="admin-info">
@@ -176,10 +182,10 @@ export default function App() {
           <div>
             <header className="page-header">
               <div>
-                <h1 className="page-title">DivineConnect Admin Console ☀️</h1>
+                <h1 className="page-title">DivineConnect Admin Console <A11yIcon emoji="☀️" label="Sun" /></h1>
                 <p className="page-subtitle">Platform health, booking metrics, and commission splits</p>
               </div>
-              <button className="btn btn-primary" onClick={() => addToast('PDF report exported', 'success')}>⚡ Export Metrics</button>
+              <button className="btn btn-primary" onClick={() => addToast('PDF report exported', 'success')} aria-label="Export metrics as PDF"><A11yIcon emoji="⚡" label="Export" /> Export Metrics</button>
             </header>
 
             <div className="analytics-grid">
@@ -219,7 +225,7 @@ export default function App() {
                   <table className="admin-table">
                     <thead>
                       <tr>
-                        <th>Booking ID</th><th>Devotee</th><th>Ritual</th><th>Temple</th><th>Amount</th><th>Status</th>
+                        <th scope="col">Booking ID</th><th scope="col">Devotee</th><th scope="col">Ritual</th><th scope="col">Temple</th><th scope="col">Amount</th><th scope="col">Status</th>
                       </tr>
                     </thead>
                     <tbody>
